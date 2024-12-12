@@ -2,6 +2,7 @@ import { CommentsType } from "../../types";
 import { apiAuth } from "../../../../shared/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parsedToken } from "../../../../shared/lib/parse-token";
+import { toast } from "react-toastify";
 
 const userInfo = parsedToken();
 
@@ -53,14 +54,24 @@ export const useComments = (postId: number) => {
     { postId: number; comment: Partial<CommentsType> }
   >({
     mutationFn: addComment,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      toast.success("Comment added successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to add comment: ${error.message}`);
+    },
   });
 
   const deleteCommentMutation = useMutation<void, Error, number>({
     mutationFn: deleteComment,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      toast.success("Comment deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete comment: ${error.message}`);
+    },
   });
 
   return {

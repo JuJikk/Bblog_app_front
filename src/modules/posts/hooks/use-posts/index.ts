@@ -2,6 +2,7 @@ import { Post } from "../../types";
 import { apiAuth } from "../../../../shared/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parsedToken } from "../../../../shared/lib/parse-token";
+import { toast } from "react-toastify";
 
 const userData = parsedToken();
 
@@ -11,6 +12,7 @@ const fetchUserPosts = async (): Promise<Post[]> => {
   });
   return data;
 };
+
 const fetchPosts = async (): Promise<Post[]> => {
   const { data } = await apiAuth.get<Post[]>("posts");
   return data;
@@ -22,10 +24,10 @@ const createPost = async (post: Partial<Post>): Promise<Post> => {
 };
 
 const updatePost = async (updatedPost: Post): Promise<Post> => {
-  const { data } = await apiAuth.patch<Post>(
-    `posts/${updatedPost.id}`,
-      {updatedPost: updatedPost, user: userData?.userId },
-  );
+  const { data } = await apiAuth.patch<Post>(`posts/${updatedPost.id}`, {
+    updatedPost,
+    user: userData?.userId,
+  });
   return data;
 };
 
@@ -54,17 +56,35 @@ export const usePosts = () => {
 
   const addPostMutation = useMutation<Post, Error, Partial<Post>>({
     mutationFn: createPost,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("Post created successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to create post: ${error.message}`);
+    },
   });
 
   const updatePostMutation = useMutation<Post, Error, Post>({
     mutationFn: updatePost,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("Post updated successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to update post: ${error.message}`);
+    },
   });
 
   const deletePostMutation = useMutation<void, Error, number>({
     mutationFn: deletePost,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("Post deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete post: ${error.message}`);
+    },
   });
 
   return {
